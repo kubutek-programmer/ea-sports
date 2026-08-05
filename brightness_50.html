@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Force Image Pixels to 50% Brightness</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        padding: 20px;
+        background: #222;
+        color: white;
+    }
+
+    canvas {
+        max-width: 90%;
+        margin-top: 20px;
+        border: 2px solid white;
+    }
+
+    input {
+        margin: 10px;
+    }
+</style>
+</head>
+<body>
+
+<h1>Make Every Pixel 50% Brightness</h1>
+
+<input type="file" id="upload" accept="image/*">
+
+<br>
+
+<canvas id="canvas"></canvas>
+
+<br>
+
+<button id="download">Download Result</button>
+
+<script>
+const upload = document.getElementById("upload");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+upload.addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const img = new Image();
+
+    img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.drawImage(img, 0, 0);
+
+        const imageData = ctx.getImageData(
+            0, 
+            0, 
+            canvas.width, 
+            canvas.height
+        );
+
+        const pixels = imageData.data;
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            let r = pixels[i];
+            let g = pixels[i + 1];
+            let b = pixels[i + 2];
+
+            // Calculate perceived brightness (luminance)
+            let brightness = 
+                0.2126 * r +
+                0.7152 * g +
+                0.0722 * b;
+
+            // Target brightness: 50% = 127.5
+            const target = 127.5;
+
+            let factor = brightness === 0 
+                ? 0 
+                : target / brightness;
+
+            r = Math.min(255, r * factor);
+            g = Math.min(255, g * factor);
+            b = Math.min(255, b * factor);
+
+            pixels[i]     = r;
+            pixels[i + 1] = g;
+            pixels[i + 2] = b;
+            // pixels[i+3] is alpha, leave unchanged
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+    };
+
+    img.src = URL.createObjectURL(file);
+});
+
+
+document.getElementById("download").onclick = function() {
+    const link = document.createElement("a");
+    link.download = "brightness_50_percent.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+};
+</script>
+
+</body>
+</html>
