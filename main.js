@@ -306,7 +306,8 @@ function createWindow() {
   frame: false,
   backgroundColor: '#00000000',
   webPreferences: {
-   preload: __dirname + "/preload.js"
+   preload: __dirname + "/preload.js",
+   backgroundThrottling: false
   }
  });
 
