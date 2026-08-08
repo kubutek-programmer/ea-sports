@@ -134,26 +134,40 @@ function renderMessageParts(parts) {
 	return frag;
 }
 
-function addMessage(authorID, authorhandler, message, pfp) {
+function addMessage(authorID, authorhandler, message, pfp, isGift) {
 	const div = document.createElement("div");
 
 	const img = document.createElement("img");
-	img.src = pfp;
+	img.src = pfp
 	img.style.height = "1em";
 	img.style.verticalAlign = "middle";
 
 	const author_text = document.createElement("a");
-	author_text.style.color = stringToColor(authorID);
-	author_text.style.cursor = "pointer";
-	author_text.style.textDecoration = "none"
-	author_text.textContent = authorhandler;
-	author_text.title = authorID;
-	author_text.href = `https://www.youtube.com/channel/${authorID}`;
 
-	author_text.addEventListener("click", (e) => {
-		e.preventDefault();
-		window.api.openExternal(author_text.href);
-	});
+	if (!isGift) {
+		author_text.style.color = stringToColor(authorID);
+		author_text.style.cursor = "pointer";
+		author_text.style.textDecoration = "none"
+		author_text.textContent = authorhandler;
+		author_text.title = authorID;
+		author_text.href = `https://www.youtube.com/channel/${authorID}`;
+
+		author_text.addEventListener("click", (e) => {
+			e.preventDefault();
+			window.api.openExternal(author_text.href);
+		});
+	} else {
+		author_text.style.color = stringToColor(authorhandler);
+		author_text.style.cursor = "pointer";
+		author_text.style.textDecoration = "none"
+		author_text.textContent = authorhandler;
+		author_text.href = `https://www.youtube.com/${authorhandler}`;
+
+		author_text.addEventListener("click", (e) => {
+			e.preventDefault();
+			window.api.openExternal(author_text.href);
+		});
+	}
 
 	const message_span = document.createElement("span");
 	message_span.appendChild(renderMessageParts(message));
@@ -169,6 +183,6 @@ function addMessage(authorID, authorhandler, message, pfp) {
 	box.scrollTop = box.scrollHeight;
 }
 
-window.api.onMessage(({ authorID, authorhandler, message, pfp }) => {
-    addMessage(authorID, authorhandler, message, pfp);
+window.api.onMessage(({ authorID, authorhandler, message, pfp, isGift }) => { // pfp = undefined
+    addMessage(authorID, authorhandler, message, pfp, isGift);
 });

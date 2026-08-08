@@ -1,0 +1,27 @@
+{
+  "name": "yt-live-chat",
+  "version": "1.0.1",
+  "description": "This is a Node.js project that lets you view YouTube live chat from a given video ID.\r NOTE: if you want to use transparent theme, rename main-transparent-support.js to main.js",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^43.1.1"
+  },
+  "dependencies": {
+    "debug": "^4.4.3",
+    "env-paths": "^3.0.0",
+    "graceful-fs": "^4.2.11",
+    "ms": "^2.1.3",
+    "progress": "^2.0.3",
+    "semver": "^7.8.0",
+    "sumchecker": "^3.0.1",
+    "undici": "^7.25.0",
+    "undici-types": "^7.18.2"
+  }
+}

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html, body {
+	height: 100%;
+	margin: 0;
+}
+
+body {
+	padding: 10px;
+	box-sizing: border-box;
+	background: #111;
+	font-family: Arial, sans-serif;
+}
+
+#chat {
+	height: 100%;
+	overflow-y: auto;
+	border: 1px solid #ccc;
+	padding: 10px;
+	box-sizing: border-box;
+	font-family: Arial, sans-serif;
+	background: #111;
+	color: white;
+}
+
+#chat div {
+	padding: 2px 0;
+}
+
+#dialog {
+	display: none;
+	position: fixed;
+	top: 50%; left: 50%;
+	transform: translate(-50%, -50%);
+	background: #2b2b2b;
+	border: 1px solid #666;
+	padding: 18px 22px 14px;
+	min-width: 340px;
+	z-index: 1000;
+	box-shadow: 0 4px 24px rgba(0,0,0,0.7);
+	font-size: 13px;
+	color: #eee;
+}
+
+#dialog input {
+	display: block;
+	width: 100%;
+	padding: 5px 8px;
+	margin: 10px 0 14px;
+	border: 1px solid #555;
+	background: #1a1a1a;
+	color: #eee;
+	font-size: 13px;
+	font-family: inherit;
+	outline: none;
+	box-sizing: border-box;
+}
+
+#dialog input:focus {
+	border-color: #88aaff;
+}
+
+#dialog .buttons {
+	display: flex;
+	gap: 6px;
+	justify-content: flex-end;
+}
+
+#dialog .buttons button {
+	padding: 4px 18px;
+	border: 1px solid #555;
+	background: linear-gradient(180deg, #3c3c3c 0%, #2c2c2c 100%);
+	color: #eee;
+	font-size: 13px;
+	font-family: inherit;
+	cursor: pointer;
+	min-width: 70px;
+}
+
+#dialog .buttons button:hover {
+	background: linear-gradient(180deg, #4c4c4c 0%, #3c3c3c 100%);
+}
+
+#dialog .buttons button:active {
+	background: #2a2a2a;
+}
+
+#dialog #dlg-apply {
+	border-color: #3a7a3a;
+	background: linear-gradient(180deg, #4c8c4c 0%, #3a7a3a 100%);
+	color: #fff;
+}
+
+#dialog #dlg-apply:hover {
+	background: linear-gradient(180deg, #5c9c5c 0%, #4a8a4a 100%);
+}
+</style>
+</head>
+
+<body>
+
+<div id="chat"></div>
+
+<div id="dialog">
+	<div id="dlg-title" style="color:#fff;font-weight:bold;font-size:15px">Change Video ID</div>
+	<input type="text" id="dlg-input" placeholder="Enter YouTube Video ID" spellcheck="false" />
+	<div class="buttons">
+		<button id="dlg-cancel">Cancel</button>
+		<button id="dlg-apply">Apply</button>
+	</div>
+</div>
+
+<script src="renderer.js"></script>
+
+</body>
+</html>

@@ -1,5 +1,3 @@
-// WARNING: there is no title bar, so you cannot drag the window, you can only move it between monitors with Win+Shift+<Left or Right>
-
 const fs = require('fs');
 const path = require('path');
 
@@ -74,11 +72,11 @@ app.disableHardwareAcceleration();
 
 let win;
 
-// Function in testing
+// function in testing
 async function getInitialContinuation(videoId) {
  const res = await fetch(`https://www.youtube.com/live_chat?v=${videoId}`, {
   headers: {
-   // Pretend to have a modern browser so YouTube doesn't complain
+   // pretend to have a modern browser so YouTube doesn't complain
    "User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36',
    "Accept-Language": 'en-US,en;q=0.9', // english
   }
@@ -88,7 +86,7 @@ async function getInitialContinuation(videoId) {
 
  // Use this to debug the HTML: console.log(html);
 
- const match = html.match(/"continuation":"([^"]+)"/); // extract continuation from returned HTML
+ const match = html.match(/"continuation":"([^"]+)"/); // Extract continuation from returned HTML
 
  if (!match) {
   console.log(html);
@@ -114,15 +112,28 @@ function getContinuation(json) {
  );
 }
 
+function formatTimestamp(timestamp) {
+ const ms = Math.floor(timestamp / 1000);
+ return new Intl.DateTimeFormat("en-US", {
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+  fractionalSecondDigits: 3
+ }).format(ms);
+}
+
 // Push chat to UI
-function pushToUI(authorID, authorhandler, message, pfp, isGift) {
+function pushToUI(timestamp, ranks, authorID, authorhandler, message, pfp) {
  if (win) {
-  win.webContents.send('chat-message', { authorID, authorhandler, message, pfp, isGift });
+  win.webContents.send('chat-message', { timestamp, ranks, authorID, authorhandler, message, pfp });
  }
 }
 
 // Emoji paresr
-function parseMessageRuns(runs = [], isGift = false) {
+function parseMessageRuns(runs = []) {
  return runs.map(item => {
   if (item.text) {
    return { type: "text", value: item.text };
@@ -133,13 +144,13 @@ function parseMessageRuns(runs = [], isGift = false) {
 
    // Pick thumbnail[1] or fallback to [0]
    const thumb =
-	emoji.image?.thumbnails?.[1]?.url ||
-	emoji.image?.thumbnails?.[0]?.url;
+    emoji.image?.thumbnails?.[1]?.url ||
+    emoji.image?.thumbnails?.[0]?.url;
 
    return {
-	type: "emoji",
-	id: emoji.emojiId,
-	url: thumb
+    type: "emoji",
+    id: emoji.emojiId,
+    url: thumb
    };
   }
 
@@ -163,14 +174,14 @@ async function pollChat() {
     method: "POST",
     headers: {
      "Content-Type": "application/json",
-     // Pretending to have a modern browser so YouTube doesn't complain
+     // pretending to have a modern browser so YouTube doesn't complain
      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36"
     },
     body: JSON.stringify({
      context: {
       client: {
        clientName: "WEB",
-       clientVersion: '2.20260603.05.00' // Pretending to have a new browser version so YouTube doesn't complain
+       clientVersion: '2.20260603.05.00' // pretending to have a new browser version so YouTube doesn't complain
       }
      },
      continuation: newContinuation
@@ -191,15 +202,12 @@ async function pollChat() {
     json.continuationContents?.liveChatContinuation?.actions ?? [];
 
    for (const action of actions) {
-    const item = action.addChatItemAction?.item;
-	if (!item) continue;
-	const renderer = item.liveChatTextMessageRenderer;
-	const giftRenderer = item.giftMessageViewModel;
+    const renderer =
+     action.addChatItemAction?.item?.liveChatTextMessageRenderer;
 
-	let messageId = undefined;
+    if (!renderer) continue;
 
-	if (!giftRenderer) try{messageId = renderer.id;} catch { console.log(JSON.stringify(item, null, 2)) }
-	else messageId = giftRenderer.id;
+    const messageId = renderer.id;
 
     // Skip duplicates
     if (messageId && seenMessageIds.has(messageId)) {
@@ -216,40 +224,28 @@ async function pollChat() {
       seenMessageIds.delete(oldest);
      }
     }
-	
-	if (!giftRenderer) {
-		const pfp =
-		 renderer.authorPhoto?.thumbnails?.at(-1)?.url ||
-		 renderer.authorPhoto?.thumbnails?.[0]?.url;
 
-		const message = parseMessageRuns(renderer.message?.runs ?? []);
-		const authorID = renderer.authorExternalChannelId ?? "Unknown";
-		const authorhandler = renderer.authorName?.simpleText ?? "Unknown";
+    const pfp =
+     renderer.authorPhoto?.thumbnails?.at(-1)?.url ||
+     renderer.authorPhoto?.thumbnails?.[0]?.url;
 
-		pushToUI(
-		 authorID,
-		 authorhandler,
-		 message,
-		 pfp,
-		 false
-		);
-	} else {
-		const pfp =
-		 giftRenderer.authorAvatar.avatarViewModel?.image?.sources[1]?.url ||
-	     giftRenderer.authorAvatar.avatarViewModel.image.sources[1].url;
-		console.log(pfp);
+    const timestamp = formatTimestamp(renderer.timestampUsec);
+	ranks = undefined;
+	if (renderer.authorBadges)
+		// This was hard but i got it
+		ranks = renderer.authorBadges.map(badge => badge.liveChatAuthorBadgeRenderer.accessibility.accessibilityData.label).join(', ');
+    const message = parseMessageRuns(renderer.message?.runs ?? []);
+    const authorID = renderer.authorExternalChannelId ?? "Unknown";
+    const authorhandler = renderer.authorName?.simpleText ?? "Unknown";
 
-		const message = [{ type: 'text', value: giftRenderer.text.content }];
-		const authorhandler = giftRenderer.authorName.content;
-
-		pushToUI(
-		 '',
-		 authorhandler,
-		 message,
-		 pfp,
-		 true
-		);
-	}
+    pushToUI(
+     timestamp,
+	 ranks,
+     authorID,
+     authorhandler,
+     message,
+     pfp
+    );
    }
    } catch (e) {
     console.log("error:", e);
@@ -324,16 +320,12 @@ function createWindow() {
  win = new BrowserWindow({
   width: 800,
   height: 600,
-  transparent: false,
-  frame: false,
-  backgroundColor: '#00000000',
   webPreferences: {
-   preload: __dirname + "/preload.js",
-   backgroundThrottling: false
+   preload: __dirname + "/preload.js"
   }
  });
 
-  win.loadFile("index-transparent-theme.html");
+  win.loadFile("index.html");
  }
 
 app.whenReady().then(async () => {
